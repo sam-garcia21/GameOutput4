@@ -40,10 +40,16 @@ var _active := false
 var last_rating: Rating = Rating.MISS
 ## quiet = no rating popup (used for the partner's assist window when only one hero is targeted).
 var quiet := false
+var key_label := ""          # letter shown inside the ring (e.g. "Z")
 
 ## Begin one timing window. Emits `finished` exactly once.
 func start(input_action: StringName, win_duration: float = 0.6, ring_color: Color = Color.WHITE, silent: bool = false) -> void:
 	quiet = silent
+	key_label = ""
+	for ev in InputMap.action_get_events(input_action):
+		if ev is InputEventKey:
+			key_label = OS.get_keycode_string(ev.physical_keycode if ev.physical_keycode != KEY_NONE else ev.keycode)
+			break
 	action = input_action
 	duration = win_duration
 	sweet_spot = win_duration * 0.75
@@ -103,7 +109,11 @@ func _draw() -> void:
 		return
 	var t := clampf(_elapsed / sweet_spot, 0.0, 1.0)
 	var radius := lerpf(START_RADIUS, TARGET_RADIUS, t)
+	draw_circle(Vector2.ZERO, TARGET_RADIUS, Color(0, 0, 0, 0.55))
 	draw_arc(Vector2.ZERO, TARGET_RADIUS, 0, TAU, 32, Color(1, 1, 1, 0.9), 3.0)
+	if key_label != "":
+		var f := PopupText.get_font()
+		draw_string(f, Vector2(-TARGET_RADIUS, 10), key_label, HORIZONTAL_ALIGNMENT_CENTER, TARGET_RADIUS * 2.0, 32, color)
 	draw_arc(Vector2.ZERO, radius, 0, TAU, 48, color, 4.0)
 
 ## Floating rating text ("PERFECT!!!") - see PopupText.
