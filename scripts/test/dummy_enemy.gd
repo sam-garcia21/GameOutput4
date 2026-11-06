@@ -8,6 +8,7 @@ func _init() -> void:
 	max_hp = 200
 	atk = 18
 	def = 3
+	spd = 10
 	body_color = Color(0.5, 0.7, 0.3)
 
 func attack(target: Hero) -> void:
