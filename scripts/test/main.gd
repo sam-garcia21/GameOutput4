@@ -8,14 +8,16 @@ signal turn_ended
 signal target_chosen(target: int)
 
 @onready var gui: Control = $GUI
-@onready var command_list: ItemList = $GUI/CommandList
-@onready var command_sub_list: ItemList = $GUI/CommandSubList
-@onready var log: Label = $GUI/Log
+@onready var command_lists: Control = $GUI/CommandLists
+@onready var command_main_list: ItemList = $GUI/CommandLists/MainList
+@onready var command_sub_list: ItemList = $GUI/CommandLists/SubList
+@onready var log: Label = $GUI/Status/LogBox/Log
 @onready var selector: Sprite2D = $GUI/Selector
+@onready var win_screen: Control = $GUI/WinScreen
+@onready var lose_screen: Control = $GUI/LoseScreen
 
 var kai: Kai
 var mira: Mira
-var dummy: DummyEnemy
 var heroes: Array = []
 var enemies: Array = []
 var fighters: Array = []
@@ -27,17 +29,20 @@ var is_player_win = false
 var SPEED_NUMBER = 100
 var chosen_enemy_index = 0
 var is_choosing_enemy = false
+var command_chosen = false
 
 func _ready() -> void:
 	kai = Kai.new()
 	mira = Mira.new()
-	dummy = DummyEnemy.new()
+	var dummy = DummyEnemy.new()
+	var dummy2 = DummyEnemy.new()
 	heroes = [kai, mira]
-	enemies = [dummy]
-	fighters = [kai, mira, dummy]
-	kai.position = Vector2(260, 420)
-	mira.position = Vector2(140, 520)
-	dummy.position = Vector2(900, 470)
+	enemies = [dummy, dummy2]
+	fighters = [kai, mira, dummy, dummy2]
+	kai.position = Vector2(260, 320)
+	mira.position = Vector2(140, 420)
+	dummy.position = Vector2(900, 300)
+	dummy2.position = Vector2(1000, 350)
 	for i in fighters.size():
 		add_child(fighters[i])
 		fighters[i].log_message.connect(_log)
@@ -73,77 +78,109 @@ func sort_by_speed(a: Array, b: Array) -> bool:
 func _start_turn() -> void:
 	if _is_game_over():
 		if is_player_win:
-			pass
+			win_screen.visible = true
 		else :
-			pass
+			lose_screen.visible = true
 	else:
 		var current = turn_order[0]
 		var i = current[1]
 		var curr_fighter = fighters[i]
-		if curr_fighter is Hero:
-			await _choose_command(curr_fighter)
-		else :
-			await _run_dummy()
-		turn_order[0] = [current[0] + SPEED_NUMBER/fighters[i].spd, i]
+		if curr_fighter.hp > 0:
+			if curr_fighter is Hero:
+				_log("It's " + curr_fighter.fighter_name + "'s turn!")
+				await _choose_command(curr_fighter)
+			else :
+				await _run_dummy(curr_fighter)
+			turn_order[0] = [current[0] + SPEED_NUMBER/fighters[i].spd, i]
+		else:
+			if curr_fighter is Hero:
+				heroes.erase(curr_fighter)
+			else:
+				enemies.erase(curr_fighter)
+			turn_order.remove_at(0)
 		turn_order.sort_custom(sort_by_speed)
+		_start_turn()
 
 func _process(_d: float) -> void:
-	status.text = "Kai %d/%d    Mira %d/%d    Dummy %d/%d" % [kai.hp, kai.max_hp, mira.hp, mira.max_hp, dummy.hp, dummy.max_hp]
+	var kai_hp = $GUI/Status/KaiStatus/HP
+	kai_hp.text = "HP: %d/%d" % [kai.hp, kai.max_hp]
+	var mira_hp = $GUI/Status/MiraStatus/HP
+	mira_hp.text = "HP: %d/%d" % [mira.hp, mira.max_hp]
+	status.text = "HP: "
+	for i in enemies.size():
+		status.text += "Dummy %d/%d    " % [enemies[i].hp, enemies[i].max_hp]
 
 func _log(t: String) -> void:
 	log.text = t
 	print(t)
 	
 func _unhandled_key_input(event: InputEvent) -> void:
+	if command_chosen:
+		get_viewport().set_input_as_handled()
+		command_chosen = false
+		return
 	if not is_choosing_enemy or not event.is_pressed():
 		return
 	var k: int = event.keycode
 	if k == KEY_ESCAPE:
 		emit_signal("target_chosen", -1)
 	elif k == KEY_UP:
-		_select_enemy(max(0, chosen_enemy_index - 1))
+		_select_enemy(-1)
 	elif k == KEY_DOWN:
-		_select_enemy(min(enemies.size() - 1, chosen_enemy_index + 1))
+		_select_enemy(1)
 	elif k == KEY_ENTER:
 		emit_signal("target_chosen", chosen_enemy_index)
 
 func _select_enemy(new_index: int) -> void:
-	chosen_enemy_index = new_index
-	selector.position = enemies[new_index].position
+	chosen_enemy_index = (chosen_enemy_index + new_index + enemies.size()) % enemies.size()
+	selector.position = enemies[chosen_enemy_index].position
 	
 func _choose_command(hero: Hero) -> void:
 	var cmd
 	var target = -1
 	while (target == -1):
-		command_list.deselect_all()
-		command_sub_list.deselect_all()
-		command_list.visible = true
+		command_lists.position = hero.position + Vector2(80, -160)
+		gui.reset_command_lists()
 		cmd = await gui.command_chosen
-		command_list.visible = false
-		command_sub_list.visible = false
+		command_chosen = true
+		gui.clear_command_lists()
 		is_choosing_enemy = true
+		selector.visible = true
 		_select_enemy(0)
 		target = await target_chosen
-	_run_command(hero, cmd[0] + cmd[1], target)
+		is_choosing_enemy = false
+		selector.visible = false
+	await _run_command(hero, cmd[0] + cmd[1], target)
 
 func _run_command(hero: Hero, command: int, target_index: int) -> void:
 	busy = true
 	var atk_data: AttackData = commands[command][1]
 	var target = enemies[target_index]
 	await hero.perform_attack(atk_data, target)
-	_start_turn()
 	busy = false
 
-func _run_dummy() -> void:
+func _run_dummy(enemy: DummyEnemy) -> void:
 	busy = true
 	# can change enemy ai for choosing target here
-	var h = randi_range(0, 1)
+	var h = randi_range(0, heroes.size() - 1)
 	var target = heroes[h]
-	await dummy.attack(target)
-	_start_turn()
+	await enemy.attack(target)
 	busy = false
 	
 func _is_game_over() -> bool:
+	var no_hp = true
+	for h in heroes:
+		if h.hp != 0:
+			no_hp = false
+	if no_hp:
+		return true
+	no_hp = true
+	for e in enemies:
+		if e.hp != 0:
+			no_hp = false
+	if no_hp:
+		is_player_win = true
+		return true
 	return false
 
 # Injects button presses at each window's sweet spot (rating varies by jitter).
