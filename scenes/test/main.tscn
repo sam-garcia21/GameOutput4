@@ -50,8 +50,8 @@ allow_search = false
 auto_height = true
 item_count = 4
 item_0/text = "Attack"
-item_1/text = "item"
-item_2/text = "Skills"
+item_1/text = "Skills"
+item_2/text = "item"
 item_3/text = "Run"
 
 [node name="SubList" type="ItemList" parent="GUI/CommandLists" unique_id=972904892]

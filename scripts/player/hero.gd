@@ -18,7 +18,10 @@ signal attack_finished
 ## Ranged heroes (bows/magic) shoot from where they stand instead of walking up.
 @export var ranged := false
 var arrow_texture: Texture2D
-var attacks: Array[AttackData] = []
+var commands: Array = []
+var turn_commands: Array = ["Attack", "Skills", "Items", "Run"]
+var basic_attack: AttackData
+var skills: Array[AttackData] = []
 var partner: Hero
 var command: ActionCommand
 

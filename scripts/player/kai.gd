@@ -25,8 +25,8 @@ func _ready() -> void:
 	}, Vector2(85, 101), 2.5)
 
 func _setup_attacks() -> void:
-	attacks = [
-		AttackData.make("Jump Strike", "A single stomp. Time the landing!", AttackData.Kind.DAMAGE, 120.0, 1, AttackData.Target.ENEMY, Color(1, 0.5, 0.3)),
+	basic_attack = AttackData.make("Jump Strike", "A single stomp. Time the landing!", AttackData.Kind.DAMAGE, 120.0, 1, AttackData.Target.ENEMY, Color(1, 0.5, 0.3))
+	skills = [
 		AttackData.make("Fire Hammer", "Three quick hammer swings, each timed.", AttackData.Kind.DAMAGE, 70.0, 3, AttackData.Target.ENEMY, Color(1, 0.3, 0.1)),
 		AttackData.make("Bros Smash", "Both heroes strike together.", AttackData.Kind.BROS, 160.0, 2, AttackData.Target.ENEMY, Color(1, 0.85, 0.2)),
 	]

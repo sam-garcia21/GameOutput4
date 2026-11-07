@@ -23,13 +23,15 @@ var enemies: Array = []
 var fighters: Array = []
 var status: Label
 var busy := false
-var commands: Array = []        # [hero, attack]
+#var commands: Array = []        # [hero, attack]
 var turn_order: Array = []
 var is_player_win = false
 var SPEED_NUMBER = 100
-var chosen_enemy_index = 0
-var is_choosing_enemy = false
-var command_chosen = false
+
+var targets: Array
+var chosen_target_index = 0
+var is_choosing_target = false
+var is_command_chosen = false
 
 func _ready() -> void:
 	kai = Kai.new()
@@ -49,9 +51,9 @@ func _ready() -> void:
 		turn_order.append([SPEED_NUMBER/fighters[i].spd, i])
 	kai.partner = mira
 	mira.partner = kai
-	for h in heroes:
-		for a in h.attacks:
-			commands.append([h, a])
+	#for h in heroes:
+		#for a in h.attacks:
+			#commands.append([h, a])
 
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -59,13 +61,13 @@ func _ready() -> void:
 	status.position = Vector2(20, 10)
 	layer.add_child(status)
 	#layer.add_child(log_label)
-	var help := Label.new()
-	help.position = Vector2(20, 300)
-	var lines := ["Z = Kai button, X = Mira button   |   SPACE: dummy hits Kai   ENTER: dummy hits Mira"]
-	for i in commands.size():
-		lines.append("%d: %s - %s" % [i + 1, commands[i][0].fighter_name, commands[i][1].attack_name])
-	help.text = "\n".join(lines)
-	layer.add_child(help)
+	#var help := Label.new()
+	#help.position = Vector2(20, 300)
+	#var lines := ["Z = Kai button, X = Mira button   |   SPACE: dummy hits Kai   ENTER: dummy hits Mira"]
+	#for i in commands.size():
+		#lines.append("%d: %s - %s" % [i + 1, commands[i][0].fighter_name, commands[i][1].attack_name])
+	#help.text = "\n".join(lines)
+	#layer.add_child(help)
 	_start_turn()
 	#if "--autotest" in OS.get_cmdline_user_args():
 		#_autotest()
@@ -115,47 +117,70 @@ func _log(t: String) -> void:
 	print(t)
 	
 func _unhandled_key_input(event: InputEvent) -> void:
-	if command_chosen:
+	if is_command_chosen:
 		get_viewport().set_input_as_handled()
-		command_chosen = false
+		is_command_chosen = false
 		return
-	if not is_choosing_enemy or not event.is_pressed():
+	if not is_choosing_target or not event.is_pressed():
 		return
 	var k: int = event.keycode
 	if k == KEY_ESCAPE:
 		emit_signal("target_chosen", -1)
 	elif k == KEY_UP:
-		_select_enemy(-1)
+		_select_target(-1)
 	elif k == KEY_DOWN:
-		_select_enemy(1)
+		_select_target(1)
 	elif k == KEY_ENTER:
-		emit_signal("target_chosen", chosen_enemy_index)
+		emit_signal("target_chosen", chosen_target_index)
+		
+func _use_selector(atk_data: AttackData) -> void:
+	if atk_data.target_type == AttackData.Target.ENEMY:
+		targets = enemies
+	elif atk_data.target_type == AttackData.Target.ALLY:
+		targets = heroes
+	is_choosing_target = true
+	selector.visible = true
+	chosen_target_index = 0
+	_select_target(0)
 
-func _select_enemy(new_index: int) -> void:
-	chosen_enemy_index = (chosen_enemy_index + new_index + enemies.size()) % enemies.size()
-	selector.position = enemies[chosen_enemy_index].position
+func _select_target(new_index: int) -> void:
+	chosen_target_index = (chosen_target_index + new_index + targets.size()) % targets.size()
+	selector.position = targets[chosen_target_index].position
+	
+func _get_attack_data(hero: Hero, command: int, subcommand: int) -> AttackData:
+	var cmd = hero.turn_commands[command]
+	var atk_data: AttackData
+	print(command, subcommand, cmd)
+	if (cmd == "Attack"):
+		atk_data = hero.basic_attack
+	elif (cmd == "Skills"):
+		atk_data = hero.skills[subcommand]
+	else:
+		atk_data = hero.basic_attack
+	return atk_data
 	
 func _choose_command(hero: Hero) -> void:
 	var cmd
 	var target = -1
+	var atk_data: AttackData
 	while (target == -1):
 		command_lists.position = hero.position + Vector2(80, -160)
+		gui.skill_list = hero.skills
+		gui.item_list = hero.skills
 		gui.reset_command_lists()
 		cmd = await gui.command_chosen
-		command_chosen = true
-		gui.clear_command_lists()
-		is_choosing_enemy = true
-		selector.visible = true
-		_select_enemy(0)
+		atk_data = _get_attack_data(hero, cmd[0], cmd[1])
+		is_command_chosen = true
+		_use_selector(atk_data)
 		target = await target_chosen
-		is_choosing_enemy = false
+		is_choosing_target = false
 		selector.visible = false
-	await _run_command(hero, cmd[0] + cmd[1], target)
+	await _run_command(hero, atk_data, target)
 
-func _run_command(hero: Hero, command: int, target_index: int) -> void:
+func _run_command(hero: Hero, atk_data: AttackData, target_index: int) -> void:
 	busy = true
-	var atk_data: AttackData = commands[command][1]
-	var target = enemies[target_index]
+
+	var target = targets[target_index]
 	await hero.perform_attack(atk_data, target)
 	busy = false
 
