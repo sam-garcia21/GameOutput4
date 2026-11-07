@@ -89,7 +89,6 @@ func _start_turn() -> void:
 		var curr_fighter = fighters[i]
 		if curr_fighter.hp > 0:
 			if curr_fighter is Hero:
-				_log("It's " + curr_fighter.fighter_name + "'s turn!")
 				await _choose_command(curr_fighter)
 			else :
 				await _run_dummy(curr_fighter)
@@ -141,6 +140,7 @@ func _use_selector(atk_data: AttackData) -> void:
 	is_choosing_target = true
 	selector.visible = true
 	chosen_target_index = 0
+	_log("Choose a target.")
 	_select_target(0)
 
 func _select_target(new_index: int) -> void:
@@ -165,9 +165,8 @@ func _choose_command(hero: Hero) -> void:
 	var atk_data: AttackData
 	while (target == -1):
 		command_lists.position = hero.position + Vector2(80, -160)
-		gui.skill_list = hero.skills
-		gui.item_list = hero.skills
-		gui.reset_command_lists()
+		gui._set_hero(hero)
+		gui._reset_command_lists()
 		cmd = await gui.command_chosen
 		atk_data = _get_attack_data(hero, cmd[0], cmd[1])
 		is_command_chosen = true

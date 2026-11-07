@@ -183,3 +183,4 @@ autowrap_mode = 3
 
 [connection signal="item_activated" from="GUI/CommandLists/MainList" to="GUI" method="_on_command_list_item_activated"]
 [connection signal="item_activated" from="GUI/CommandLists/SubList" to="GUI" method="_on_command_sub_list_item_activated"]
+[connection signal="item_selected" from="GUI/CommandLists/SubList" to="GUI" method="_on_sub_list_item_selected"]
