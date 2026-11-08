@@ -10,7 +10,6 @@ signal target_chosen(target: int)
 @onready var command_lists: Control = $GUI/CommandLists
 @onready var command_main_list: ItemList = $GUI/CommandLists/MainList
 @onready var command_sub_list: ItemList = $GUI/CommandLists/SubList
-@onready var log: Label = $GUI/Status/LogBox/Log
 @onready var selector: Sprite2D = $GUI/Selector
 @onready var hp_bar: ProgressBar = $GUI/HP_Bar
 @onready var win_screen: Control = $GUI/WinScreen
@@ -52,7 +51,7 @@ func _ready() -> void:
 		e.z_index = -2
 	for i in fighters.size():
 		add_child(fighters[i])
-		fighters[i].log_message.connect(_log)
+		fighters[i].log_message.connect(gui._log)
 		fighters[i].hp_changed.connect(_update_hp)
 		turn_order.append([SPEED_NUMBER/fighters[i].spd, i])
 	kai.partner = mira
@@ -84,6 +83,7 @@ func sort_by_speed(a: Array, b: Array) -> bool:
 	return false
 	
 func _start_turn() -> void:
+	print("turn start")
 	if _is_game_over():
 		if is_player_win:
 			win_screen.visible = true
@@ -92,12 +92,14 @@ func _start_turn() -> void:
 	else:
 		var current = turn_order[0]
 		var i = current[1]
-		var curr_fighter = fighters[i]
-		curr_fighter.start_turn()
+		var curr_fighter: Fighter = fighters[i]
+		await curr_fighter.start_turn()
 		if curr_fighter.hp > 0:
-			if curr_fighter is Hero:
+			if curr_fighter._has_effect(StatusEffectData.Kind.PARALYSIS).has_effect:
+				await gui._log("%s is paralyzed and can't move!" % [curr_fighter.fighter_name], 1)
+			elif curr_fighter is Hero:
 				await _choose_command(curr_fighter)
-			else :
+			else:
 				await _run_dummy(curr_fighter)
 			turn_order[0] = [current[0] + SPEED_NUMBER/fighters[i].spd, i]
 		else:
@@ -107,11 +109,10 @@ func _start_turn() -> void:
 				enemies.erase(curr_fighter)
 			turn_order.remove_at(0)
 		turn_order.sort_custom(sort_by_speed)
+		await curr_fighter.end_turn()
+		if not gui.timer.is_stopped():
+			await gui.timer.timeout
 		_start_turn()
-
-func _log(t: String) -> void:
-	log.text = t
-	print(t)
 
 func _update_hp(fighter: Fighter, hp: int, max_hp: int):
 	if fighter is Kai:
@@ -130,6 +131,7 @@ func _update_hp(fighter: Fighter, hp: int, max_hp: int):
 			heroes.erase(fighter)
 		else:
 			enemies.erase(fighter)
+		fighters.erase(fighter)
 		
 	
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -156,11 +158,13 @@ func _use_selector(target_type: int) -> void:
 		targets = enemies
 	elif target_type == AttackData.Target.ALLY:
 		targets = heroes
+	elif target_type == AttackData.Target.ALL:
+		targets = fighters
 	is_choosing_target = true
 	selector.visible = true
 	hp_bar.visible = true
 	chosen_target_index = 0
-	_log("Choose a target.")
+	gui._log("Choose a target.", 0)
 	_select_target(0)
 
 func _select_target(new_index: int) -> void:
@@ -174,7 +178,6 @@ func _select_target(new_index: int) -> void:
 func _get_target_data(hero: Hero, command: int, subcommand: int) -> int:
 	var cmd = hero.turn_commands[command]
 	var target_data
-	print(command, subcommand, cmd)
 	if (cmd == "Attack"):
 		target_data = hero.basic_attack.target_type
 	elif (cmd == "Skills"):
@@ -209,7 +212,6 @@ func _choose_command(hero: Hero) -> void:
 			hp_bar.visible = false
 	if target_data != AttackData.Target.SELF:
 		target = targets[target_index]
-	print(target_index)
 	await _run_command(hero, cmd[0], cmd[1], target)
 
 func _run_command(hero: Hero, main_cmd: int, sub_cmd: int, target: Fighter) -> void:

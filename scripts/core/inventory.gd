@@ -5,15 +5,31 @@ var items: Array[ItemData] = []
 
 func _init():
 	var potion = ItemData.make(
-		"Potion", "Heals 30 HP.", ItemData.Kind.HEAL, 30, 1, ItemData.Target.ALLY
+		"Potion", "Heals 30 HP.", ItemData.Kind.HEAL, 30, ItemData.Target.ALLY
 	)
 	for i in range(5):
 		items.append(potion)
 	var bomb = ItemData.make(
-		"Bomb", "Deals 100 HP on a single enemy.", ItemData.Kind.DAMAGE, 100, 1, ItemData.Target.ENEMY
+		"Bomb", "Deals 100 HP on a single enemy.", ItemData.Kind.DAMAGE, 100, ItemData.Target.ENEMY
 	)
 	for i in range(5):
 		items.append(bomb)
+	var poison = ItemData.make(
+		"Poison Bomb", "Inflicts poison.", ItemData.Kind.DAMAGE, 0, ItemData.Target.ALL,
+		[StatusEffectData.make(
+			"Poison", "", 10, StatusEffectData.Kind.POISON, 5, 1
+		)]
+	)
+	for i in range(3):
+		items.append(poison)
+	var para = ItemData.make(
+		"Parlyz Bomb", "Inflicts paralysis.", ItemData.Kind.DAMAGE, 0, ItemData.Target.ALL,
+		[StatusEffectData.make(
+			"Paralysis", "", 0, StatusEffectData.Kind.PARALYSIS, 5, 1
+		)]
+	)
+	for i in range(3):
+		items.append(para)
 		
 func _use_item(index: int, target: Fighter):
 	var item = items[index]
@@ -21,4 +37,6 @@ func _use_item(index: int, target: Fighter):
 		target.heal(item.power)
 	elif item.kind == ItemData.Kind.DAMAGE:
 		target.take_damage(item.power)
+	for s in item.status_effects:
+		target._apply_effect(s)
 	items.remove_at(index)

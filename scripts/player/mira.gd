@@ -29,6 +29,8 @@ func _ready() -> void:
 func _setup_attacks() -> void:
 	basic_attack = AttackData.make("Quick Slash", "Two fast slashes, each timed.", AttackData.Kind.DAMAGE, 80.0, 2, AttackData.Target.ENEMY, Color(0.4, 0.8, 1))
 	skills = [
-		AttackData.make("Quick Slash", "Two fast slashes, each timed.", AttackData.Kind.DAMAGE, 80.0, 2, AttackData.Target.ENEMY, Color(0.4, 0.8, 1)),
+		AttackData.make("Poison Arrow", "An arrow with a chance to poison, better timing for more damage.", AttackData.Kind.DAMAGE, 80.0, 2, AttackData.Target.ENEMY, Color(0.4, 0.8, 1), [
+			StatusEffectData.make("Poison", "Deals damage every turn", 5, StatusEffectData.Kind.POISON, 5, 1.0)
+		]),
 		AttackData.make("Mend", "Heal an ally. Better timing heals more.", AttackData.Kind.HEAL, 45.0, 1, AttackData.Target.ALLY, Color(0.4, 1, 0.5)),
 	]

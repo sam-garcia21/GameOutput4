@@ -3,6 +3,7 @@ extends Control
 @onready var command_main_list: ItemList = $CommandLists/MainList
 @onready var command_sub_list: ItemList = $CommandLists/SubList
 @onready var log: Label = $Status/LogBox/Log
+@onready var timer: Timer = $Timer
 
 signal command_chosen(command: int, subcommand: int)
 
@@ -12,6 +13,16 @@ var skill_list: Array[AttackData]
 var item_list: Array[ItemData]
 
 var mainCommand
+
+func _log(s: String, time: int) -> void:
+	if (not timer.is_stopped()):
+		await timer.timeout
+	print(s)
+	log.text = s
+	if (time > 0):
+		timer.wait_time = time
+		timer.start()
+		await timer.timeout
 
 func _set_hero(hero: Hero) -> void:
 	curr_hero_name = hero.fighter_name
@@ -32,7 +43,7 @@ func _on_command_list_item_activated(index: int) -> void:
 		mainCommand = index
 		_use_sub_list()
 	elif index == command_list.size() - 1:
-		log.text = "There's no running from this battle."
+		_log("There's no running from this battle.", 0)
 	else:
 		_clear_command_lists()
 		emit_signal("command_chosen", index, 0)
@@ -46,7 +57,7 @@ func _on_command_sub_list_item_activated(index: int) -> void:
 		_use_main_list()
 
 func _use_main_list():
-	log.text = "It's " + curr_hero_name + "'s turn!"
+	_log("It's " + curr_hero_name + "'s turn!", 0)
 	command_main_list.visible = true
 	command_sub_list.visible = false
 	_make_unselectable(command_sub_list)
@@ -85,7 +96,7 @@ func _on_sub_list_item_selected(index: int) -> void:
 		list = item_list
 
 	if index < list.size():
-		log.text = list[index].description
+		_log(list[index].description, 0)
 	else:
-		log.text = "Go back."
+		_log("Go back.", 0)
 			

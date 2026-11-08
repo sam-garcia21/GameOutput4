@@ -54,6 +54,9 @@ offset_bottom = 40.0
 theme = SubResource("Theme_ax885")
 script = ExtResource("5_dxjet")
 
+[node name="Timer" type="Timer" parent="GUI" unique_id=1828683550]
+one_shot = true
+
 [node name="CommandLists" type="Control" parent="GUI" unique_id=1909720088]
 anchors_preset = 0
 offset_right = 40.0
@@ -78,11 +81,11 @@ item_3/selectable = false
 visible = false
 layout_mode = 0
 offset_left = 130.0
-offset_right = 254.0
-offset_bottom = 88.0
+offset_right = 290.0
+offset_bottom = 250.0
 theme = SubResource("Theme_ax885")
 allow_search = false
-auto_height = true
+scroll_hint_mode = 2
 item_count = 4
 item_0/text = "Attack"
 item_1/text = "Skills"

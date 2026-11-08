@@ -12,4 +12,4 @@ func _init() -> void:
 	body_color = Color(0.5, 0.7, 0.3)
 
 func attack(target: Hero) -> void:
-	await target.receive_attack(self, 100.0)
+	await target.receive_attack(self, 100.0, [])

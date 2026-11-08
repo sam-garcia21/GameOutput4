@@ -60,7 +60,7 @@ func perform_attack(attack: AttackData, target: Fighter) -> void:
 	attack_finished.emit()
 
 func _do_damage(attack: AttackData, target: Fighter) -> void:
-	log_message.emit("%s used %s on %s!" % [fighter_name, attack.attack_name, target.fighter_name])
+	log_message.emit("%s used %s on %s!" % [fighter_name, attack.attack_name, target.fighter_name], 1)
 	if not ranged:
 		await _move_to(target.position + Vector2(-70, 0))
 	for i in attack.hits:
@@ -72,25 +72,25 @@ func _do_damage(attack: AttackData, target: Fighter) -> void:
 			await _shoot(target)
 		else:
 			await _lunge()
-		_apply_hit(attack.power, rating, target)
+		_apply_hit(attack.power, rating, target, attack.status_effects)
 	if not ranged:
 		await _move_to(home_position)
 
 func _do_heal(attack: AttackData, target: Fighter) -> void:
-	log_message.emit("%s used %s on %s!" % [fighter_name, attack.attack_name, target.fighter_name])
+	log_message.emit("%s used %s on %s!" % [fighter_name, attack.attack_name, target.fighter_name], 1)
 	var rating: int = await command.run(input_action, attack.window_time, attack.color)
 	var amount := int(round(attack.power * ActionCommand.MULTIPLIER[rating] * randf_range(0.9, 1.1)))
 	var gained := target.heal(amount)
-	log_message.emit("%s  %s recovered %d HP." % [RATING_TEXT[rating], target.fighter_name, gained])
+	log_message.emit("%s  %s recovered %d HP." % [RATING_TEXT[rating], target.fighter_name, gained], 1)
 	await _hop()
 
 ## Combined attack: BOTH heroes must time their own button. If both land
 ## Great or better, the team gets a bonus.
 func _do_bros(attack: AttackData, target: Fighter) -> void:
 	if partner == null or not partner.is_alive():
-		log_message.emit("%s needs a partner for %s!" % [fighter_name, attack.attack_name])
+		log_message.emit("%s needs a partner for %s!" % [fighter_name, attack.attack_name], 1)
 		return
-	log_message.emit("%s and %s used %s on %s!" % [fighter_name, partner.fighter_name, attack.attack_name, target.fighter_name])
+	log_message.emit("%s and %s used %s on %s!" % [fighter_name, partner.fighter_name, attack.attack_name, target.fighter_name], 1)
 	_move_to(target.position + Vector2(-70, -30))
 	await partner._move_to(target.position + Vector2(-70, 30))
 	for i in attack.hits:
@@ -108,30 +108,32 @@ func _do_bros(attack: AttackData, target: Fighter) -> void:
 		var power := attack.power * float(atk + partner.atk) / (2.0 * atk)
 		if ratings[0] >= ActionCommand.Rating.GREAT and ratings[1] >= ActionCommand.Rating.GREAT:
 			power *= 1.2
-			log_message.emit("TEAMWORK bonus!")
+			log_message.emit("TEAMWORK bonus!", 0.5)
 		_swing()
 		await _lunge()
-		_apply_hit(power, avg, target)
+		_apply_hit(power, avg, target, attack.status_effects)
 	_move_to(home_position)
 	await partner._move_to(partner.home_position)
 
-func _apply_hit(power: float, rating: int, target: Fighter) -> void:
-	var r := calc_damage(power, rating, target)
+func _apply_hit(power: float, rating: int, target: Fighter, se: Array[StatusEffectData]) -> void:
+	var r := calc_damage(power, rating, target, se)
 	if r.missed:
-		log_message.emit("%s  ...but %s dodged!" % [RATING_TEXT[rating], target.fighter_name])
+		log_message.emit("%s  ...but %s dodged!" % [RATING_TEXT[rating], target.fighter_name], 1)
 		return
 	var lost := target.take_damage(r.damage, self)
 	var crit := " CRITICAL HIT!" if r.crit else ""
-	log_message.emit("%s  %s took %d damage.%s" % [RATING_TEXT[rating], target.fighter_name, lost, crit])
+	log_message.emit("%s  %s took %d damage.%s" % [RATING_TEXT[rating], target.fighter_name, lost, crit], 1)
+	for s in r.status_effects:
+		target._apply_effect(s)
 
 # ---------------------------------------------------------------- DEFENSE --
 
 ## Called by an enemy attack. Opens a dodge window for this hero AND an
 ## assist window for the partner (each uses their own button).
 ## Returns {damage:int, rating:int, countered:bool}.
-func receive_attack(attacker: Fighter, power: float, telegraph: float = 0.7) -> Dictionary:
+func receive_attack(attacker: Fighter, power: float, se: Array[StatusEffectData], telegraph: float = 0.7) -> Dictionary:
 	var key_text: String = InputMap.action_get_events(input_action)[0].as_text_physical_keycode()
-	log_message.emit("%s attacks %s!  (press %s to dodge)" % [attacker.fighter_name, fighter_name, key_text])
+	log_message.emit("%s attacks %s!  (press %s to dodge)" % [attacker.fighter_name, fighter_name, key_text], 0.5)
 	var own := {"r": -1}
 	var assist := {"r": -1}
 	command.finished.connect(func(r: int) -> void: own.r = r, CONNECT_ONE_SHOT)
@@ -144,9 +146,9 @@ func receive_attack(attacker: Fighter, power: float, telegraph: float = 0.7) -> 
 		await get_tree().process_frame
 
 	var out := {"damage": 0, "rating": own.r, "countered": false}
-	var hit := attacker.calc_damage(power, ActionCommand.Rating.GOOD, self)
+	var hit := attacker.calc_damage(power, ActionCommand.Rating.GOOD, self, se)
 	if hit.missed:
-		log_message.emit("%s's attack missed!" % attacker.fighter_name)
+		log_message.emit("%s's attack missed!" % attacker.fighter_name, 0.5)
 		return out
 	var factor: float = [1.0, 0.6, 0.3, 0.0][own.r]      # MISS, GOOD, GREAT, PERFECT
 	if has_assist and assist.r >= ActionCommand.Rating.GOOD:
@@ -157,13 +159,13 @@ func receive_attack(attacker: Fighter, power: float, telegraph: float = 0.7) -> 
 		var back := maxi(1, int(round(atk * 0.5)))
 		attacker.take_damage(back, self)
 		out.countered = true
-		log_message.emit("PERFECT dodge! %s countered %s for %d damage!" % [fighter_name, attacker.fighter_name, back])
+		log_message.emit("PERFECT dodge! %s countered %s for %d damage!" % [fighter_name, attacker.fighter_name, back], 0.5)
 	elif own.r > ActionCommand.Rating.MISS:
 		await _hop()
-		log_message.emit("%s guarded! %s" % [fighter_name, RATING_TEXT[own.r]])
+		log_message.emit("%s guarded! %s" % [fighter_name, RATING_TEXT[own.r]], 0.5)
 	if dmg > 0:
 		out.damage = take_damage(dmg, attacker)
-		log_message.emit("%s took %d damage." % [fighter_name, out.damage])
+		log_message.emit("%s took %d damage." % [fighter_name, out.damage], 0.5)
 	return out
 
 # -------------------------------------------------------------- ANIMATION --
