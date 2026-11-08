@@ -4,7 +4,7 @@ extends Resource
 ## The battle menu can read name/description to build buttons.
 
 enum Kind { DAMAGE, HEAL, BROS }
-enum Target { ENEMY, ALLY }
+enum Target { ENEMY, ALLY, SELF }
 
 @export var attack_name: String = "Attack"
 @export_multiline var description: String = ""

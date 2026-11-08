@@ -4,7 +4,6 @@ extends Node2D
 ## Dodge/attack buttons: Z (Kai), X (Mira).
 ## Run with user arg `-- --autotest` to script a full run with auto timing.
 
-signal turn_ended
 signal target_chosen(target: int)
 
 @onready var gui: Control = $GUI
@@ -13,6 +12,7 @@ signal target_chosen(target: int)
 @onready var command_sub_list: ItemList = $GUI/CommandLists/SubList
 @onready var log: Label = $GUI/Status/LogBox/Log
 @onready var selector: Sprite2D = $GUI/Selector
+@onready var hp_bar: ProgressBar = $GUI/HP_Bar
 @onready var win_screen: Control = $GUI/WinScreen
 @onready var lose_screen: Control = $GUI/LoseScreen
 
@@ -43,11 +43,14 @@ func _ready() -> void:
 	fighters = [kai, mira, dummy, dummy2]
 	kai.position = Vector2(260, 320)
 	mira.position = Vector2(140, 420)
-	dummy.position = Vector2(900, 300)
-	dummy2.position = Vector2(1000, 350)
+	dummy.position = Vector2(850, 300)
+	dummy2.position = Vector2(950, 400)
+	for e in enemies:
+		e.z_index = -2
 	for i in fighters.size():
 		add_child(fighters[i])
 		fighters[i].log_message.connect(_log)
+		fighters[i].hp_changed.connect(_update_hp)
 		turn_order.append([SPEED_NUMBER/fighters[i].spd, i])
 	kai.partner = mira
 	mira.partner = kai
@@ -87,6 +90,7 @@ func _start_turn() -> void:
 		var current = turn_order[0]
 		var i = current[1]
 		var curr_fighter = fighters[i]
+		curr_fighter.start_turn()
 		if curr_fighter.hp > 0:
 			if curr_fighter is Hero:
 				await _choose_command(curr_fighter)
@@ -102,18 +106,28 @@ func _start_turn() -> void:
 		turn_order.sort_custom(sort_by_speed)
 		_start_turn()
 
-func _process(_d: float) -> void:
-	var kai_hp = $GUI/Status/KaiStatus/HP
-	kai_hp.text = "HP: %d/%d" % [kai.hp, kai.max_hp]
-	var mira_hp = $GUI/Status/MiraStatus/HP
-	mira_hp.text = "HP: %d/%d" % [mira.hp, mira.max_hp]
-	status.text = "HP: "
-	for i in enemies.size():
-		status.text += "Dummy %d/%d    " % [enemies[i].hp, enemies[i].max_hp]
-
 func _log(t: String) -> void:
 	log.text = t
 	print(t)
+
+func _update_hp(fighter: Fighter, hp: int, max_hp: int):
+	if fighter is Kai:
+		var kai_hp = $GUI/Status/KaiStatus/HP
+		kai_hp.text = "HP: %d/%d" % [hp, max_hp]
+	elif fighter is Mira:
+		var mira_hp = $GUI/Status/MiraStatus/HP
+		mira_hp.text = "HP: %d/%d" % [hp, max_hp]
+	else:
+		status.text = "HP: "
+		for i in enemies.size():
+			status.text += "Dummy %d/%d    " % [enemies[i].hp, enemies[i].max_hp]
+			
+	if hp <= 0:
+		if fighter is Hero:
+			heroes.erase(fighter)
+		else:
+			enemies.erase(fighter)
+		
 	
 func _unhandled_key_input(event: InputEvent) -> void:
 	if is_command_chosen:
@@ -125,62 +139,89 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var k: int = event.keycode
 	if k == KEY_ESCAPE:
 		emit_signal("target_chosen", -1)
+		is_choosing_target = false
 	elif k == KEY_UP:
 		_select_target(-1)
 	elif k == KEY_DOWN:
 		_select_target(1)
 	elif k == KEY_ENTER:
 		emit_signal("target_chosen", chosen_target_index)
+		is_choosing_target = false
 		
-func _use_selector(atk_data: AttackData) -> void:
-	if atk_data.target_type == AttackData.Target.ENEMY:
+func _use_selector(target_type: int) -> void:
+	if target_type == AttackData.Target.ENEMY:
 		targets = enemies
-	elif atk_data.target_type == AttackData.Target.ALLY:
+	elif target_type == AttackData.Target.ALLY:
 		targets = heroes
 	is_choosing_target = true
 	selector.visible = true
+	hp_bar.visible = true
 	chosen_target_index = 0
 	_log("Choose a target.")
 	_select_target(0)
 
 func _select_target(new_index: int) -> void:
 	chosen_target_index = (chosen_target_index + new_index + targets.size()) % targets.size()
-	selector.position = targets[chosen_target_index].position
+	var target = targets[chosen_target_index]
+	selector.position = target.position
+	hp_bar.position = target.position + Vector2(-(hp_bar.size.x / 2), 10)
+	hp_bar.max_value = target.max_hp
+	hp_bar.value = target.hp
 	
-func _get_attack_data(hero: Hero, command: int, subcommand: int) -> AttackData:
+func _get_target_data(hero: Hero, command: int, subcommand: int) -> int:
 	var cmd = hero.turn_commands[command]
-	var atk_data: AttackData
+	var target_data
 	print(command, subcommand, cmd)
 	if (cmd == "Attack"):
-		atk_data = hero.basic_attack
+		target_data = hero.basic_attack.target_type
 	elif (cmd == "Skills"):
-		atk_data = hero.skills[subcommand]
+		target_data = hero.skills[subcommand].target_type
+	elif (cmd == "Defend"):
+		target_data = AttackData.Target.SELF
 	else:
-		atk_data = hero.basic_attack
-	return atk_data
+		target_data = hero.basic_attack.target_type
+	return target_data
 	
 func _choose_command(hero: Hero) -> void:
 	var cmd
-	var target = -1
-	var atk_data: AttackData
-	while (target == -1):
+	var target: Fighter = null
+	var target_index = -1
+	var target_data: int
+	while (target_index == -1):
 		command_lists.position = hero.position + Vector2(80, -160)
 		gui._set_hero(hero)
 		gui._reset_command_lists()
 		cmd = await gui.command_chosen
-		atk_data = _get_attack_data(hero, cmd[0], cmd[1])
+		target_data = _get_target_data(hero, cmd[0], cmd[1])
 		is_command_chosen = true
-		_use_selector(atk_data)
-		target = await target_chosen
-		is_choosing_target = false
-		selector.visible = false
-	await _run_command(hero, atk_data, target)
+		if (target_data == AttackData.Target.SELF):
+			target_index = 0
+			target = hero
+		else:
+			_use_selector(target_data)
+			target_index = await target_chosen
+			selector.visible = false
+			hp_bar.visible = false
+	if target_data != AttackData.Target.SELF:
+		target = targets[target_index]
+	print(target_index)
+	await _run_command(hero, cmd[0], cmd[1], target)
 
-func _run_command(hero: Hero, atk_data: AttackData, target_index: int) -> void:
+func _run_command(hero: Hero, main_cmd: int, sub_cmd: int, target: Fighter) -> void:
 	busy = true
 
-	var target = targets[target_index]
-	await hero.perform_attack(atk_data, target)
+	var cmd = hero.turn_commands[main_cmd]
+	if (cmd == "Attack"):
+		var atk_data = hero.basic_attack
+		await hero.perform_attack(atk_data, target)
+	elif (cmd == "Skills"):
+		var atk_data = hero.skills[sub_cmd]
+		await hero.perform_attack(atk_data, target)
+	elif (cmd == "Items"):
+		var atk_data = hero.basic_attack
+		await hero.perform_attack(atk_data, target)
+	elif (cmd == "Defend") :
+		hero.defend()
 	busy = false
 
 func _run_dummy(enemy: DummyEnemy) -> void:
@@ -192,17 +233,9 @@ func _run_dummy(enemy: DummyEnemy) -> void:
 	busy = false
 	
 func _is_game_over() -> bool:
-	var no_hp = true
-	for h in heroes:
-		if h.hp != 0:
-			no_hp = false
-	if no_hp:
+	if heroes.size() == 0:
 		return true
-	no_hp = true
-	for e in enemies:
-		if e.hp != 0:
-			no_hp = false
-	if no_hp:
+	elif enemies.size() == 0:
 		is_player_win = true
 		return true
 	return false

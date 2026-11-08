@@ -19,7 +19,7 @@ signal attack_finished
 @export var ranged := false
 var arrow_texture: Texture2D
 var commands: Array = []
-var turn_commands: Array = ["Attack", "Skills", "Items", "Run"]
+var turn_commands: Array = ["Attack", "Skills", "Items", "Defend", "Run"]
 var basic_attack: AttackData
 var skills: Array[AttackData] = []
 var partner: Hero

@@ -5,7 +5,7 @@ extends Node2D
 ## everyone the same way (take_damage / heal / is_alive / signals).
 
 signal log_message(text: String)          # feed this into the UI text box
-signal hp_changed(current: int, maximum: int)
+signal hp_changed(who: Fighter, current: int, maximum: int)
 signal damaged(amount: int, attacker: Fighter)
 signal died(who: Fighter)
 
@@ -22,6 +22,7 @@ var home_position := Vector2.ZERO
 @export var head_offset := Vector2(0, -130)   # where damage numbers appear
 var _flash := 0.0
 var sprite: AnimatedSprite2D               # set by setup_sprites(); null = box art
+var is_defending: bool = false
 
 ## Build an AnimatedSprite2D from horizontal sprite sheets.
 ## anims: {name: [png_path, frame_count, fps, loop]}. Frames are square
@@ -92,13 +93,15 @@ func calc_damage(power: float, rating: int, target: Fighter) -> Dictionary:
 func take_damage(amount: int, attacker: Fighter = null) -> int:
 	if not is_alive():
 		return 0
+	if (is_defending):
+		amount /= 2
 	var lost := mini(amount, hp)
 	hp -= lost
 	_flash = 0.25
 	queue_redraw()
 	_on_hit_visual()
 	PopupText.spawn(self, head_offset, str(lost), Color.WHITE, 32)
-	hp_changed.emit(hp, max_hp)
+	hp_changed.emit(self, hp, max_hp)
 	damaged.emit(lost, attacker)
 	if hp <= 0:
 		log_message.emit("%s was defeated!" % fighter_name)
@@ -113,8 +116,15 @@ func heal(amount: int) -> int:
 	var gained := mini(amount, max_hp - hp)
 	hp += gained
 	PopupText.spawn(self, head_offset, "+%d" % gained, Color(0.4, 1, 0.5), 32)
-	hp_changed.emit(hp, max_hp)
+	hp_changed.emit(self, hp, max_hp)
 	return gained
+	
+func defend():
+	is_defending = true
+	
+func start_turn():
+	if is_defending:
+		is_defending = false
 
 func _process(delta: float) -> void:
 	if _flash > 0.0:

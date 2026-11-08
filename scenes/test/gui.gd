@@ -7,6 +7,7 @@ extends Control
 signal command_chosen(command: int, subcommand: int)
 
 var curr_hero_name: String
+var command_list: Array
 var skill_list: Array[AttackData]
 var item_list: Array
 
@@ -14,6 +15,7 @@ var mainCommand
 
 func _set_hero(hero: Hero) -> void:
 	curr_hero_name = hero.fighter_name
+	command_list = hero.turn_commands
 	skill_list = hero.skills
 	item_list = hero.skills
 
@@ -48,6 +50,9 @@ func _use_main_list():
 	command_sub_list.visible = false
 	_make_unselectable(command_sub_list)
 	_make_selectable(command_main_list)
+	command_main_list.clear()
+	for i in command_list:
+		command_main_list.add_item(i)
 	
 func _use_sub_list():
 	command_sub_list.visible = true

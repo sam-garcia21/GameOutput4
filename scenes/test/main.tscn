@@ -5,22 +5,41 @@
 [ext_resource type="Texture2D" uid="uid://jgcj2wxlohdr" path="res://assets/Forest.png" id="3_o0ihb"]
 [ext_resource type="FontFile" uid="uid://debnrrrihvy1s" path="res://assets/fonts/PeaberryBase.ttf" id="4_o0ihb"]
 [ext_resource type="Script" uid="uid://cnj1idqoje3oq" path="res://scenes/test/gui.gd" id="5_dxjet"]
-[ext_resource type="Texture2D" uid="uid://b32ee31bhotp7" path="res://icon.svg" id="6_2qhjg"]
+[ext_resource type="Texture2D" uid="uid://c53x58r7bap70" path="res://assets/selector.png" id="6_2qhjg"]
 
 [sub_resource type="Theme" id="Theme_ax885"]
 default_font = ExtResource("4_o0ihb")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ax885"]
+bg_color = Color(0.09411765, 0.21568628, 0.14509805, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a7cc1"]
+bg_color = Color(0.25882354, 0.7411765, 0.19607843, 0.9647059)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+anti_aliasing = false
+
 [node name="Main" type="Node2D" unique_id=313942067]
 script = ExtResource("1_wwlvk")
 
-[node name="Background1" type="Sprite2D" parent="." unique_id=466059231]
+[node name="Background" type="Node2D" parent="." unique_id=394853370]
+z_index = -10
+
+[node name="Ground" type="Sprite2D" parent="Background" unique_id=466059231]
 modulate = Color(0.6341689, 0.8092497, 1.2441279, 1)
 z_index = -1
 position = Vector2(576, 246)
 scale = Vector2(1.151, 1.1510001)
 texture = ExtResource("2_ae60x")
 
-[node name="Background2" type="Sprite2D" parent="." unique_id=306423879]
+[node name="Back" type="Sprite2D" parent="Background" unique_id=306423879]
 modulate = Color(0.7104189, 0.84255576, 1.0630127, 0.627451)
 position = Vector2(576, 238.00003)
 scale = Vector2(1.1459459, 1.1459459)
@@ -51,8 +70,9 @@ auto_height = true
 item_count = 4
 item_0/text = "Attack"
 item_1/text = "Skills"
-item_2/text = "item"
+item_2/text = "Items"
 item_3/text = "Run"
+item_3/selectable = false
 
 [node name="SubList" type="ItemList" parent="GUI/CommandLists" unique_id=972904892]
 visible = false
@@ -88,7 +108,8 @@ theme = SubResource("Theme_ax885")
 
 [node name="Selector" type="Sprite2D" parent="GUI" unique_id=469694448]
 visible = false
-scale = Vector2(1, 0.2)
+modulate = Color(0.7490196, 0.6745098, 1, 0.7607843)
+z_index = -5
 texture = ExtResource("6_2qhjg")
 
 [node name="LoseScreen" type="Control" parent="GUI" unique_id=107521030]
@@ -173,13 +194,25 @@ text = "HP: 24 / 24"
 layout_mode = 2
 
 [node name="Log" type="Label" parent="GUI/Status/LogBox" unique_id=496788093]
-z_index = 1
 custom_minimum_size = Vector2(600, 0)
 layout_mode = 2
 theme = SubResource("Theme_ax885")
 theme_override_font_sizes/font_size = 30
 text = "It's Mira's turn!"
 autowrap_mode = 3
+
+[node name="HP_Bar" type="ProgressBar" parent="GUI" unique_id=1741736688]
+visible = false
+layout_mode = 0
+offset_left = 827.0
+offset_top = 141.0
+offset_right = 967.0
+offset_bottom = 161.0
+theme_override_styles/background = SubResource("StyleBoxFlat_ax885")
+theme_override_styles/fill = SubResource("StyleBoxFlat_a7cc1")
+value = 50.0
+fill_mode = 1
+show_percentage = false
 
 [connection signal="item_activated" from="GUI/CommandLists/MainList" to="GUI" method="_on_command_list_item_activated"]
 [connection signal="item_activated" from="GUI/CommandLists/SubList" to="GUI" method="_on_command_sub_list_item_activated"]
