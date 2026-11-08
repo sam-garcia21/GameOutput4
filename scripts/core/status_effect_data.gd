@@ -1,7 +1,7 @@
 class_name StatusEffectData
 extends Resource
 
-enum Kind { NONE, POISON, PARALYSIS} # i might change if no time to implement
+enum Kind { NONE, POISON, PARALYSIS, BLIND } # i might change if no time to implement
 
 @export var status_effect_name: String = ""
 @export_multiline var description: String = ""

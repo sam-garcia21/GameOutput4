@@ -80,7 +80,7 @@ func calc_damage(power: float, rating: int, target: Fighter, status_effects: Arr
 	for s in status_effects:
 		if randf() < s.chance:
 			result.status_effects.append(s)
-	if randf() < 0.05:                                   # 5% whiff
+	if randf() < 0.05 or (_has_effect(StatusEffectData.Kind.BLIND) and randf() < 0.5):                                   # 5% whiff
 		result.missed = true
 		return result
 	var raw := atk * power / 100.0

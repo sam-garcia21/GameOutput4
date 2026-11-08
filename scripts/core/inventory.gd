@@ -30,6 +30,14 @@ func _init():
 	)
 	for i in range(3):
 		items.append(para)
+	var blind = ItemData.make(
+		"Blind Bomb", "Inflicts blind.", ItemData.Kind.DAMAGE, 0, ItemData.Target.ALL,
+		[StatusEffectData.make(
+			"Blind", "", 0, StatusEffectData.Kind.BLIND, 5, 1
+		)]
+	)
+	for i in range(3):
+		items.append(blind)
 		
 func _use_item(index: int, target: Fighter):
 	var item = items[index]
