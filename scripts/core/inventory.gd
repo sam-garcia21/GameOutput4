@@ -17,7 +17,7 @@ func _init():
 	var poison = ItemData.make(
 		"Poison Bomb", "Inflicts poison.", ItemData.Kind.DAMAGE, 0, ItemData.Target.ALL,
 		[StatusEffectData.make(
-			"Poison", "", 10, StatusEffectData.Kind.POISON, 5, 1
+			"Poison", "", 10, StatusEffectData.Kind.POISON, 5, 1, 2, 0
 		)]
 	)
 	for i in range(3):
@@ -25,7 +25,7 @@ func _init():
 	var para = ItemData.make(
 		"Parlyz Bomb", "Inflicts paralysis.", ItemData.Kind.DAMAGE, 0, ItemData.Target.ALL,
 		[StatusEffectData.make(
-			"Paralysis", "", 0, StatusEffectData.Kind.PARALYSIS, 5, 1
+			"Paralysis", "", 0, StatusEffectData.Kind.PARALYSIS, 5, 1, 9, 0
 		)]
 	)
 	for i in range(3):
@@ -33,7 +33,7 @@ func _init():
 	var blind = ItemData.make(
 		"Blind Bomb", "Inflicts blind.", ItemData.Kind.DAMAGE, 0, ItemData.Target.ALL,
 		[StatusEffectData.make(
-			"Blind", "", 0, StatusEffectData.Kind.BLIND, 5, 1
+			"Blind", "", 0, StatusEffectData.Kind.BLIND, 5, 1, 3, 0
 		)]
 	)
 	for i in range(3):

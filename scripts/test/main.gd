@@ -14,6 +14,7 @@ signal target_chosen(target: int)
 @onready var hp_bar: ProgressBar = $GUI/HP_Bar
 @onready var win_screen: Control = $GUI/WinScreen
 @onready var lose_screen: Control = $GUI/LoseScreen
+@onready var statuses: HFlowContainer = $GUI/Statuses
 
 var kai: Kai
 var mira: Mira
@@ -54,6 +55,8 @@ func _ready() -> void:
 		fighters[i].log_message.connect(gui._log)
 		fighters[i].hp_changed.connect(_update_hp)
 		turn_order.append([SPEED_NUMBER/fighters[i].spd, i])
+	for h in heroes:
+		_update_hp(h, h.hp, h.max_hp)
 	kai.partner = mira
 	mira.partner = kai
 	#for h in heroes:
@@ -121,11 +124,7 @@ func _update_hp(fighter: Fighter, hp: int, max_hp: int):
 	elif fighter is Mira:
 		var mira_hp = $GUI/Status/MiraStatus/HP
 		mira_hp.text = "HP: %d/%d" % [hp, max_hp]
-	else:
-		status.text = "HP: "
-		for i in enemies.size():
-			status.text += "Dummy %d/%d    " % [enemies[i].hp, enemies[i].max_hp]
-			
+		
 	if hp <= 0:
 		if fighter is Hero:
 			heroes.erase(fighter)
@@ -163,17 +162,35 @@ func _use_selector(target_type: int) -> void:
 	is_choosing_target = true
 	selector.visible = true
 	hp_bar.visible = true
+	statuses.visible = true
 	chosen_target_index = 0
 	gui._log("Choose a target.", 0)
 	_select_target(0)
 
 func _select_target(new_index: int) -> void:
 	chosen_target_index = (chosen_target_index + new_index + targets.size()) % targets.size()
-	var target = targets[chosen_target_index]
+	var target: Fighter = targets[chosen_target_index]
 	selector.position = target.position
 	hp_bar.position = target.position + Vector2(-(hp_bar.size.x / 2), 10)
 	hp_bar.max_value = target.max_hp
 	hp_bar.value = target.hp
+	var status_icons = statuses.get_children()
+	for c in status_icons:
+		statuses.remove_child(c)
+		c.queue_free()
+	for s in target.status_effects:
+		print(s.status_effect_name, s.duration)
+		var c = Control.new()
+		var icon = Sprite2D.new()
+		icon.texture = load(s.icon_texture)
+		icon.region_enabled = true
+		icon.region_rect = s.icon_rect
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		c.add_child(icon)
+		c.visible = true
+		statuses.add_child(c)
+	print(statuses.get_children().size())
+	statuses.position = target.position + Vector2(0, -150)
 	
 func _get_target_data(hero: Hero, command: int, subcommand: int) -> int:
 	var cmd = hero.turn_commands[command]
@@ -210,6 +227,7 @@ func _choose_command(hero: Hero) -> void:
 			target_index = await target_chosen
 			selector.visible = false
 			hp_bar.visible = false
+			statuses.visible = false
 	if target_data != AttackData.Target.SELF:
 		target = targets[target_index]
 	await _run_command(hero, cmd[0], cmd[1], target)

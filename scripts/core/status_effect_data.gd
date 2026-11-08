@@ -9,8 +9,10 @@ enum Kind { NONE, POISON, PARALYSIS, BLIND } # i might change if no time to impl
 @export var kind: Kind = Kind.NONE
 @export var duration: int = 0
 @export var chance: float = 100.0
+@export var icon_texture: String
+@export var icon_rect: Rect2
 
-static func make(n: String, desc: String, p: int, k: Kind, d: int, c: float) -> StatusEffectData:
+static func make(n: String, desc: String, p: int, k: Kind, d: int, c: float, x: int, y: int) -> StatusEffectData:
 	var a := StatusEffectData.new()
 	a.status_effect_name = n
 	a.description = desc
@@ -18,4 +20,6 @@ static func make(n: String, desc: String, p: int, k: Kind, d: int, c: float) -> 
 	a.kind = k
 	a.duration = d
 	a.chance = c
+	a.icon_texture = "res://assets/IconSet.png"
+	a.icon_rect = Rect2(x * 32, y * 32, 32, 32)
 	return a

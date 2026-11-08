@@ -140,19 +140,25 @@ func _apply_effect(s: StatusEffectData) -> void:
 
 func _has_effect(status_kind: int) -> Dictionary:
 	var result := {"has_effect": false, "status_effect": null}
+	print("has effect")
 	for s in status_effects:
+		print(s.status_effect_name, s.duration)
 		if s.kind == status_kind:
 			result.has_effect = true
-			result.status_effect = s
+			result.status_effect = s.duplicate(true)
 	return result
 	
 func start_turn() -> void:
 	if is_defending:
 		is_defending = false
+	var to_remove = []
 	for s in status_effects:
+		print(s.status_effect_name, s.duration)
 		s.duration -= 1
 		if s.duration <= 0:
-			status_effects.erase(s)
+			to_remove.append(s)
+	for s in to_remove:
+		status_effects.erase(s)
 			
 func end_turn() -> void:
 	var poison = _has_effect(StatusEffectData.Kind.POISON)

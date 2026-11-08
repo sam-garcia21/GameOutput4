@@ -216,6 +216,16 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_a7cc1")
 value = 50.0
 show_percentage = false
 
+[node name="Statuses" type="HFlowContainer" parent="GUI" unique_id=78877531]
+visible = false
+layout_mode = 0
+offset_left = 237.0
+offset_top = 118.0
+offset_right = 339.0
+offset_bottom = 218.0
+theme_override_constants/h_separation = 36
+theme_override_constants/v_separation = 36
+
 [connection signal="item_activated" from="GUI/CommandLists/MainList" to="GUI" method="_on_command_list_item_activated"]
 [connection signal="item_activated" from="GUI/CommandLists/SubList" to="GUI" method="_on_command_sub_list_item_activated"]
 [connection signal="item_selected" from="GUI/CommandLists/SubList" to="GUI" method="_on_sub_list_item_selected"]
