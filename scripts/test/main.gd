@@ -22,6 +22,7 @@ var heroes: Array = []
 var enemies: Array = []
 var fighters: Array = []
 var status: Label
+var inventory: Inventory
 var busy := false
 #var commands: Array = []        # [hero, attack]
 var turn_order: Array = []
@@ -36,6 +37,8 @@ var is_command_chosen = false
 func _ready() -> void:
 	kai = Kai.new()
 	mira = Mira.new()
+	inventory = Inventory.new()
+	gui.item_list = inventory.items
 	var dummy = DummyEnemy.new()
 	var dummy2 = DummyEnemy.new()
 	heroes = [kai, mira]
@@ -176,6 +179,8 @@ func _get_target_data(hero: Hero, command: int, subcommand: int) -> int:
 		target_data = hero.basic_attack.target_type
 	elif (cmd == "Skills"):
 		target_data = hero.skills[subcommand].target_type
+	elif (cmd == "Items"):
+		target_data = inventory.items[subcommand].target_type
 	elif (cmd == "Defend"):
 		target_data = AttackData.Target.SELF
 	else:
@@ -218,8 +223,7 @@ func _run_command(hero: Hero, main_cmd: int, sub_cmd: int, target: Fighter) -> v
 		var atk_data = hero.skills[sub_cmd]
 		await hero.perform_attack(atk_data, target)
 	elif (cmd == "Items"):
-		var atk_data = hero.basic_attack
-		await hero.perform_attack(atk_data, target)
+		inventory._use_item(sub_cmd, target)
 	elif (cmd == "Defend") :
 		hero.defend()
 	busy = false

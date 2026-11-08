@@ -9,7 +9,7 @@ signal command_chosen(command: int, subcommand: int)
 var curr_hero_name: String
 var command_list: Array
 var skill_list: Array[AttackData]
-var item_list: Array
+var item_list: Array[ItemData]
 
 var mainCommand
 
@@ -17,7 +17,6 @@ func _set_hero(hero: Hero) -> void:
 	curr_hero_name = hero.fighter_name
 	command_list = hero.turn_commands
 	skill_list = hero.skills
-	item_list = hero.skills
 
 func _reset_command_lists() -> void:
 	command_main_list.deselect_all()
@@ -29,7 +28,7 @@ func _clear_command_lists() -> void:
 	command_sub_list.visible = false
 
 func _on_command_list_item_activated(index: int) -> void:
-	if index == 1:
+	if index == 1 || index == 2:
 		mainCommand = index
 		_use_sub_list()
 	else:
@@ -62,7 +61,10 @@ func _use_sub_list():
 	if mainCommand == 1:
 		for i in skill_list:
 			command_sub_list.add_item(i.attack_name)
-		command_sub_list.add_item("Back")
+	elif mainCommand == 2:
+		for i in item_list:
+			command_sub_list.add_item(i.item_name)
+	command_sub_list.add_item("Back")
 		
 func _make_selectable(list: ItemList):
 	list.focus_mode = Control.FOCUS_ALL
@@ -74,9 +76,14 @@ func _make_unselectable(list: ItemList):
 	list.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _on_sub_list_item_selected(index: int) -> void:
+	var list: Array
 	if mainCommand == 1:
-		if index < skill_list.size():
-			log.text = skill_list[index].description
-		else:
-			log.text = "Go back."
+		list = skill_list
+	elif mainCommand == 2:
+		list = item_list
+
+	if index < list.size():
+		log.text = list[index].description
+	else:
+		log.text = "Go back."
 			
