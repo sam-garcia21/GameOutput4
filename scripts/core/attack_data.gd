@@ -5,6 +5,7 @@ extends Resource
 
 enum Kind { DAMAGE, HEAL, BROS }
 enum Target { ENEMY, ALLY, SELF }
+enum Status { NONE, POISON, BLIND} # i might change if no time to implement
 
 @export var attack_name: String = "Attack"
 @export_multiline var description: String = ""
@@ -19,8 +20,14 @@ enum Target { ENEMY, ALLY, SELF }
 @export var window_time: float = 0.6
 ## Colour of the timing ring (helps players tell attacks apart).
 @export var color: Color = Color.WHITE
+## Status effect from attack
+@export var status: int = Status.NONE
+## Duration of status effect when inflicted
+@export var status_duration: int = 0
+## Chance of inflicting status effect
+@export var status_chance: float = 0
 
-static func make(n: String, desc: String, k: Kind, p: float, h: int = 1, t: Target = Target.ENEMY, c: Color = Color.WHITE) -> AttackData:
+static func make(n: String, desc: String, k: Kind, p: float, h: int = 1, t: Target = Target.ENEMY, c: Color = Color.WHITE, s: int = Status.NONE, sd: int = 0, sc: int = 0) -> AttackData:
 	var a := AttackData.new()
 	a.attack_name = n
 	a.description = desc
@@ -29,4 +36,7 @@ static func make(n: String, desc: String, k: Kind, p: float, h: int = 1, t: Targ
 	a.hits = h
 	a.target_type = t
 	a.color = c
+	a.status = s
+	a.status_duration = sd
+	a.status_chance = sc
 	return a

@@ -31,6 +31,8 @@ func _on_command_list_item_activated(index: int) -> void:
 	if index == 1 || index == 2:
 		mainCommand = index
 		_use_sub_list()
+	elif index == command_list.size() - 1:
+		log.text = "There's no running from this battle."
 	else:
 		_clear_command_lists()
 		emit_signal("command_chosen", index, 0)

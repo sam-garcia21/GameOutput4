@@ -211,7 +211,6 @@ offset_bottom = 161.0
 theme_override_styles/background = SubResource("StyleBoxFlat_ax885")
 theme_override_styles/fill = SubResource("StyleBoxFlat_a7cc1")
 value = 50.0
-fill_mode = 1
 show_percentage = false
 
 [connection signal="item_activated" from="GUI/CommandLists/MainList" to="GUI" method="_on_command_list_item_activated"]
