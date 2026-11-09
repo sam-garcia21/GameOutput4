@@ -18,6 +18,8 @@ signal target_chosen(target: int)
 
 var kai: Kai
 var mira: Mira
+var maria: Maria
+var morishima: Morishima
 var heroes: Array = []
 var enemies: Array = []
 var fighters: Array = []
@@ -39,15 +41,15 @@ func _ready() -> void:
 	mira = Mira.new()
 	inventory = Inventory.new()
 	gui.item_list = inventory.items
-	var dummy = DummyEnemy.new()
-	var dummy2 = DummyEnemy.new()
+	maria = Maria.new()
+	morishima = Morishima.new()
 	heroes = [kai, mira]
-	enemies = [dummy, dummy2]
-	fighters = [kai, mira, dummy, dummy2]
+	enemies = [maria, morishima]
+	fighters = [kai, mira, maria, morishima]
 	kai.position = Vector2(260, 320)
 	mira.position = Vector2(140, 420)
-	dummy.position = Vector2(850, 300)
-	dummy2.position = Vector2(950, 400)
+	maria.position = Vector2(850, 300)
+	morishima.position = Vector2(950, 400)
 	for e in enemies:
 		e.z_index = -2
 	for i in fighters.size():
@@ -248,12 +250,16 @@ func _run_command(hero: Hero, main_cmd: int, sub_cmd: int, target: Fighter) -> v
 		hero.defend()
 	busy = false
 
-func _run_dummy(enemy: DummyEnemy) -> void:
+func _run_dummy(enemy: Fighter) -> void:
 	busy = true
 	# can change enemy ai for choosing target here
 	var h = randi_range(0, heroes.size() - 1)
 	var target = heroes[h]
-	await enemy.attack(target)
+	var a = randi_range(1,2)
+	if (a == 1):
+		await enemy.attack(target)
+	elif (a == 2):
+		await enemy.poison(target)
 	busy = false
 	
 func _is_game_over() -> bool:
