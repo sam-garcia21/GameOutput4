@@ -53,9 +53,10 @@ func _ready() -> void:
 	for i in fighters.size():
 		add_child(fighters[i])
 		fighters[i].log_message.connect(gui._log)
+		fighters[i].died.connect(_update_died)
 		fighters[i].hp_changed.connect(_update_hp)
 		fighters[i].mp_changed.connect(_update_mp)
-		turn_order.append([SPEED_NUMBER/fighters[i].spd, i])
+		turn_order.append([SPEED_NUMBER/fighters[i].spd, fighters[i]])
 	for h in heroes:
 		_update_hp(h, h.hp, h.max_hp)
 		_update_mp(h, h.mp, h.max_mp)
@@ -78,7 +79,8 @@ func _start_turn() -> void:
 	else:
 		var current = turn_order[0]
 		var i = current[1]
-		var curr_fighter: Fighter = fighters[i]
+		var curr_fighter: Fighter = i
+		print(curr_fighter.fighter_name)
 		await curr_fighter.start_turn()
 		if curr_fighter.hp > 0:
 			if curr_fighter._has_effect(StatusEffectData.Kind.PARALYSIS).has_effect:
@@ -87,19 +89,29 @@ func _start_turn() -> void:
 				await _choose_command(curr_fighter)
 			else:
 				await _run_dummy(curr_fighter)
-			turn_order[0] = [current[0] + SPEED_NUMBER/fighters[i].spd, i]
-		else:
-			if curr_fighter is Hero:
-				heroes.erase(curr_fighter)
-			else:
-				enemies.erase(curr_fighter)
-			turn_order.remove_at(0)
+			if curr_fighter.hp > 0:
+				turn_order[0] = [current[0] + SPEED_NUMBER/curr_fighter.spd, i]
 		turn_order.sort_custom(sort_by_speed)
 		await curr_fighter.end_turn()
 		if not gui.timer.is_stopped():
 			await gui.timer.timeout
 		_start_turn()
-
+		
+func _update_died(fighter: Fighter):
+	if fighter is Hero:
+		heroes.erase(fighter)
+	else:
+		enemies.erase(fighter)
+	print(turn_order.size())
+	var index = 0
+	for i in range(turn_order.size()):
+		if turn_order[i][1] == fighter:
+			index = i
+			break
+	turn_order.remove_at(index)
+	fighters.erase(fighter)
+	print(turn_order.size())
+	
 func _update_hp(fighter: Fighter, hp: int, max_hp: int):
 	if fighter is Kai:
 		var kai_hp = $GUI/Status/KaiStatus/HP
@@ -107,13 +119,6 @@ func _update_hp(fighter: Fighter, hp: int, max_hp: int):
 	elif fighter is Mira:
 		var mira_hp = $GUI/Status/MiraStatus/HP
 		mira_hp.text = "HP: %d/%d" % [hp, max_hp]
-		
-	if hp <= 0:
-		if fighter is Hero:
-			heroes.erase(fighter)
-		else:
-			enemies.erase(fighter)
-		fighters.erase(fighter)
 		
 func _update_mp(fighter: Fighter, mp: int, max_mp: int):
 	if fighter is Kai:

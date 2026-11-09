@@ -9,6 +9,11 @@ func _init():
 	)
 	for i in range(5):
 		items.append(potion)
+	var death = ItemData.make(
+		"??? Potion", "???", ItemData.Kind.DAMAGE, 999, ItemData.Target.ALLY
+	)
+	for i in range(5):
+		items.append(death)
 	var bomb = ItemData.make(
 		"Bomb", "Deals 100 HP on a single enemy.", ItemData.Kind.DAMAGE, 100, ItemData.Target.ENEMY
 	)
