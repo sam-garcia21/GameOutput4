@@ -80,7 +80,7 @@ func calc_damage(power: float, rating: int, target: Fighter, status_effects: Arr
 	for s in status_effects:
 		if randf() < s.chance:
 			result.status_effects.append(s)
-	if randf() < 0.05 or (_has_effect(StatusEffectData.Kind.BLIND) and randf() < 0.5):                                   # 5% whiff
+	if randf() < 0.05 or (_has_effect(StatusEffectData.Kind.BLIND).has_effect and randf() < 0.5):                                   # 5% whiff
 		result.missed = true
 		return result
 	var raw := atk * power / 100.0
@@ -164,7 +164,7 @@ func end_turn() -> void:
 	var poison = _has_effect(StatusEffectData.Kind.POISON)
 	if poison.has_effect:
 		log_message.emit("%s is poisoned. Lost %d HP!" % [fighter_name, poison.status_effect.power], 1)
-		take_damage(poison.status_effect.power)
+		await take_damage(poison.status_effect.power)
 
 func _process(delta: float) -> void:
 	if _flash > 0.0:
