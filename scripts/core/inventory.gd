@@ -45,6 +45,8 @@ func _use_item(index: int, target: Fighter):
 		target.heal(item.power)
 	elif item.kind == ItemData.Kind.DAMAGE:
 		target.take_damage(item.power)
+	elif item.kind == ItemData.Kind.MP_RESTORE:
+		target._change_mp(item.power)
 	for s in item.status_effects:
 		target._apply_effect(s)
 	items.remove_at(index)

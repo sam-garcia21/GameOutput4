@@ -1,7 +1,7 @@
 class_name ItemData
 extends Resource
 
-enum Kind { DAMAGE, HEAL }
+enum Kind { DAMAGE, HEAL, MP_RESTORE}
 enum Target { ENEMY, ALLY, SELF, ALL}
 
 @export var item_name: String = "Item"

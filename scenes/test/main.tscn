@@ -78,10 +78,9 @@ item_3/text = "Run"
 item_3/selectable = false
 
 [node name="SubList" type="ItemList" parent="GUI/CommandLists" unique_id=972904892]
-visible = false
 layout_mode = 0
 offset_left = 130.0
-offset_right = 290.0
+offset_right = 360.0
 offset_bottom = 250.0
 theme = SubResource("Theme_ax885")
 allow_search = false
@@ -180,6 +179,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "HP: 24 / 24"
 
+[node name="MP" type="Label" parent="GUI/Status/MiraStatus" unique_id=379785292]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "HP: 24 / 24"
+
 [node name="KaiStatus" type="VBoxContainer" parent="GUI/Status" unique_id=868558963]
 layout_mode = 2
 
@@ -189,6 +193,11 @@ theme_override_font_sizes/font_size = 30
 text = "Kai"
 
 [node name="HP" type="Label" parent="GUI/Status/KaiStatus" unique_id=1961302853]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "HP: 24 / 24"
+
+[node name="MP" type="Label" parent="GUI/Status/KaiStatus" unique_id=1983292837]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "HP: 24 / 24"

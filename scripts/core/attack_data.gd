@@ -21,8 +21,9 @@ enum Target { ENEMY, ALLY, SELF, ALL}
 @export var color: Color = Color.WHITE
 # Status effects attack can inflict
 @export var status_effects: Array[StatusEffectData]
+@export var mp_cost: int
 
-static func make(n: String, desc: String, k: Kind, p: float, h: int = 1, t: Target = Target.ENEMY, c: Color = Color.WHITE, se: Array[StatusEffectData] = []) -> AttackData:
+static func make(n: String, desc: String, k: Kind, p: float, h: int = 1, t: Target = Target.ENEMY, c: Color = Color.WHITE, se: Array[StatusEffectData] = [], mp_cost: int = 0) -> AttackData:
 	var a := AttackData.new()
 	a.attack_name = n
 	a.description = desc
@@ -32,4 +33,5 @@ static func make(n: String, desc: String, k: Kind, p: float, h: int = 1, t: Targ
 	a.target_type = t
 	a.color = c
 	a.status_effects = se
+	a.mp_cost = mp_cost
 	return a

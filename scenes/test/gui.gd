@@ -8,6 +8,7 @@ extends Control
 signal command_chosen(command: int, subcommand: int)
 
 var curr_hero_name: String
+var curr_mp: int
 var command_list: Array
 var skill_list: Array[AttackData]
 var item_list: Array[ItemData]
@@ -26,6 +27,7 @@ func _log(s: String, time: int) -> void:
 
 func _set_hero(hero: Hero) -> void:
 	curr_hero_name = hero.fighter_name
+	curr_mp = hero.mp
 	command_list = hero.turn_commands
 	skill_list = hero.skills
 
@@ -72,8 +74,10 @@ func _use_sub_list():
 	_make_selectable(command_sub_list)
 	command_sub_list.clear()
 	if mainCommand == 1:
-		for i in skill_list:
-			command_sub_list.add_item(i.attack_name)
+		for i in range(skill_list.size()):
+			command_sub_list.add_item(skill_list[i].attack_name + " - " + str(skill_list[i].mp_cost))
+			if skill_list[i].mp_cost > curr_mp:
+				command_sub_list.set_item_disabled(i, true)
 	elif mainCommand == 2:
 		for i in item_list:
 			command_sub_list.add_item(i.item_name)

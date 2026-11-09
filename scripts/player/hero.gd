@@ -50,6 +50,7 @@ func _register_input() -> void:
 # ---------------------------------------------------------------- OFFENSE --
 
 func perform_attack(attack: AttackData, target: Fighter) -> void:
+	_change_mp(-1 * attack.mp_cost)
 	match attack.kind:
 		AttackData.Kind.HEAL:
 			await _do_heal(attack, target)

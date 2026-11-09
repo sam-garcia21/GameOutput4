@@ -29,7 +29,11 @@ func _setup_attacks() -> void:
 	skills = [
 		AttackData.make("Blinding Slash", "One slash. Can cause blindness.", AttackData.Kind.DAMAGE, 120.0, 1, AttackData.Target.ENEMY, Color(1, 0.5, 0.3), [
 			StatusEffectData.make("Blind", "Higher chance to miss", 5, StatusEffectData.Kind.BLIND, 5, 0.7, 3, 0)
-		]),
-		AttackData.make("Double Slash", "Two sword slashes, each timed.", AttackData.Kind.DAMAGE, 70.0, 3, AttackData.Target.ENEMY, Color(1, 0.3, 0.1)),
-		AttackData.make("Duo Attack", "Both heroes strike together.", AttackData.Kind.BROS, 160.0, 2, AttackData.Target.ENEMY, Color(1, 0.85, 0.2)),
+		], 10),
+		AttackData.make("Double Slash", "Two sword slashes, each timed.", AttackData.Kind.DAMAGE, 70.0, 3, AttackData.Target.ENEMY, Color(1, 0.3, 0.1), [
+			
+		], 10),
+		AttackData.make("Duo Attack", "Both heroes strike together.", AttackData.Kind.BROS, 160.0, 2, AttackData.Target.ENEMY, Color(1, 0.85, 0.2), [
+			
+		], 50),
 	]

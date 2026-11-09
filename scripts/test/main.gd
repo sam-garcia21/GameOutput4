@@ -54,31 +54,14 @@ func _ready() -> void:
 		add_child(fighters[i])
 		fighters[i].log_message.connect(gui._log)
 		fighters[i].hp_changed.connect(_update_hp)
+		fighters[i].mp_changed.connect(_update_mp)
 		turn_order.append([SPEED_NUMBER/fighters[i].spd, i])
 	for h in heroes:
 		_update_hp(h, h.hp, h.max_hp)
+		_update_mp(h, h.mp, h.max_mp)
 	kai.partner = mira
 	mira.partner = kai
-	#for h in heroes:
-		#for a in h.attacks:
-			#commands.append([h, a])
-
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	status = Label.new()
-	status.position = Vector2(20, 10)
-	layer.add_child(status)
-	#layer.add_child(log_label)
-	#var help := Label.new()
-	#help.position = Vector2(20, 300)
-	#var lines := ["Z = Kai button, X = Mira button   |   SPACE: dummy hits Kai   ENTER: dummy hits Mira"]
-	#for i in commands.size():
-		#lines.append("%d: %s - %s" % [i + 1, commands[i][0].fighter_name, commands[i][1].attack_name])
-	#help.text = "\n".join(lines)
-	#layer.add_child(help)
 	_start_turn()
-	#if "--autotest" in OS.get_cmdline_user_args():
-		#_autotest()
 		
 func sort_by_speed(a: Array, b: Array) -> bool:
 	if a[0] < b[0]:
@@ -132,6 +115,13 @@ func _update_hp(fighter: Fighter, hp: int, max_hp: int):
 			enemies.erase(fighter)
 		fighters.erase(fighter)
 		
+func _update_mp(fighter: Fighter, mp: int, max_mp: int):
+	if fighter is Kai:
+		var kai_mp = $GUI/Status/KaiStatus/MP
+		kai_mp.text = "MP: %d/%d" % [mp, max_mp]
+	elif fighter is Mira:
+		var mira_mp = $GUI/Status/MiraStatus/MP
+		mira_mp.text = "MP: %d/%d" % [mp, max_mp]
 	
 func _unhandled_key_input(event: InputEvent) -> void:
 	if is_command_chosen:
@@ -234,7 +224,6 @@ func _choose_command(hero: Hero) -> void:
 
 func _run_command(hero: Hero, main_cmd: int, sub_cmd: int, target: Fighter) -> void:
 	busy = true
-
 	var cmd = hero.turn_commands[main_cmd]
 	if (cmd == "Attack"):
 		var atk_data = hero.basic_attack
@@ -243,9 +232,9 @@ func _run_command(hero: Hero, main_cmd: int, sub_cmd: int, target: Fighter) -> v
 		var atk_data = hero.skills[sub_cmd]
 		await hero.perform_attack(atk_data, target)
 	elif (cmd == "Items"):
-		inventory._use_item(sub_cmd, target)
+		await inventory._use_item(sub_cmd, target)
 	elif (cmd == "Defend") :
-		hero.defend()
+		await hero.defend()
 	busy = false
 
 func _run_dummy(enemy: DummyEnemy) -> void:
@@ -263,20 +252,3 @@ func _is_game_over() -> bool:
 		is_player_win = true
 		return true
 	return false
-
-# Injects button presses at each window's sweet spot (rating varies by jitter).
-#func _autotest() -> void:
-	#for h in [kai, mira]:
-		#h.command.started.connect(func(action: StringName, sweet: float) -> void:
-			#await get_tree().create_timer(sweet + randf_range(-0.12, 0.12)).timeout
-			#var ev := InputEventAction.new()
-			#ev.action = action
-			#ev.pressed = true
-			#Input.parse_input_event(ev))
-	#await get_tree().create_timer(0.5).timeout
-	#for i in commands.size():
-		#await _run_command(i)
-	#await _run_dummy(kai)
-	#await _run_dummy(mira)
-	#print("AUTOTEST DONE: Kai %d Mira %d Dummy %d" % [kai.hp, mira.hp, dummy.hp])
-	#get_tree().quit()

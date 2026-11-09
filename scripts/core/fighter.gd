@@ -6,6 +6,7 @@ extends Node2D
 
 signal log_message(text: String)          # feed this into the UI text box
 signal hp_changed(who: Fighter, current: int, maximum: int)
+signal mp_changed(who: Fighter, current: int, maximum: int)
 signal damaged(amount: int, attacker: Fighter)
 signal died(who: Fighter)
 
@@ -14,10 +15,12 @@ signal died(who: Fighter)
 @export var atk := 20
 @export var def := 5
 @export var spd := 10                      # for the battle handler's turn order
+@export var max_mp := 50
 @export var body_color := Color(0.8, 0.8, 0.8)
 @export var texture: Texture2D             # optional sprite; falls back to a box
 
 var hp := 0
+var mp := 0
 var home_position := Vector2.ZERO
 @export var head_offset := Vector2(0, -130)   # where damage numbers appear
 var _flash := 0.0
@@ -68,6 +71,7 @@ func _on_hit_visual() -> void:
 
 func _ready() -> void:
 	hp = max_hp
+	mp = max_mp
 	home_position = position
 
 func is_alive() -> bool:
@@ -123,8 +127,16 @@ func heal(amount: int) -> int:
 	hp_changed.emit(self, hp, max_hp)
 	return gained
 	
+func _change_mp(amount: int) -> void:
+	mp += amount
+	mp_changed.emit(self, mp, max_mp)
+	
 func defend() -> void:
 	is_defending = true
+	if sprite:
+		sprite.modulate = Color(0.263, 0.627, 0.78)
+	else:
+		modulate = Color(0.263, 0.627, 0.78)
 	
 func _apply_effect(s: StatusEffectData) -> void:
 	var in_status_effects: bool = false
@@ -151,6 +163,10 @@ func _has_effect(status_kind: int) -> Dictionary:
 func start_turn() -> void:
 	if is_defending:
 		is_defending = false
+		if sprite:
+			sprite.modulate = Color(1.0, 1.0, 1.0)
+		else:
+			modulate = Color(1.0, 1.0, 1.0)
 	var to_remove = []
 	for s in status_effects:
 		print(s.status_effect_name, s.duration)
