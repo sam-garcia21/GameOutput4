@@ -4,7 +4,7 @@ extends Hero
 
 func _init() -> void:
 	fighter_name = "Mira"
-	max_hp = 90
+	max_hp = 190
 	atk = 20
 	def = 4
 	spd = 14

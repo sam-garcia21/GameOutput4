@@ -5,7 +5,7 @@ extends Fighter
 
 func _init() -> void:
 	fighter_name = "Morishima"
-	max_hp = 110
+	max_hp = 210
 	atk = 27
 	def = 5
 	spd = 15
@@ -15,7 +15,7 @@ func _ready() -> void:
 	super._ready()
 	var d := "res://assets/enemy/morishima/"
 	setup_sprites({
-		"idle": [d + "Idle.png", 10, 10.0, true],
+		"idle": [d + "Idle.png", 8, 10.0, true],
 		"attack1": [d + "Attack1.png", 6, 16.0, false],
 		"hit": [d + "Take Hit.png", 3, 12.0, false],
 		"jump": [d + "Jump.png", 2, 8.0, false],
