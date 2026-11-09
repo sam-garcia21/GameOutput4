@@ -58,6 +58,7 @@ script = ExtResource("5_dxjet")
 one_shot = true
 
 [node name="CommandLists" type="Control" parent="GUI" unique_id=1909720088]
+visible = false
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
@@ -213,6 +214,7 @@ text = "It's Mira's turn!"
 autowrap_mode = 3
 
 [node name="HP_Bar" type="ProgressBar" parent="GUI" unique_id=1741736688]
+visible = false
 layout_mode = 0
 offset_left = 827.0
 offset_top = 141.0
@@ -224,6 +226,7 @@ value = 50.0
 show_percentage = false
 
 [node name="Statuses" type="HFlowContainer" parent="GUI" unique_id=78877531]
+visible = false
 layout_mode = 0
 offset_left = 237.0
 offset_top = 118.0
