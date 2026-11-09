@@ -10,6 +10,7 @@ func _init() -> void:
 	def = 5
 	spd = 15
 	body_color = Color(0.5, 0.7, 0.3)
+	add_child(timer)
 
 func _ready() -> void:
 	super._ready()
