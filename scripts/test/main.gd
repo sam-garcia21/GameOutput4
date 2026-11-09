@@ -84,7 +84,8 @@ func _start_turn() -> void:
 		await curr_fighter.start_turn()
 		if curr_fighter.hp > 0:
 			if curr_fighter._has_effect(StatusEffectData.Kind.PARALYSIS).has_effect:
-				await gui._log("%s is paralyzed and can't move!" % [curr_fighter.fighter_name], 1)
+				gui._log("%s is paralyzed and can't move!" % [curr_fighter.fighter_name])
+				await kai._wait(0.6)
 			elif curr_fighter is Hero:
 				await _choose_command(curr_fighter)
 			else:
@@ -95,6 +96,7 @@ func _start_turn() -> void:
 		await curr_fighter.end_turn()
 		if not gui.timer.is_stopped():
 			await gui.timer.timeout
+		kai._wait(0.5)
 		_start_turn()
 		
 func _update_died(fighter: Fighter):
@@ -159,7 +161,7 @@ func _use_selector(target_type: int) -> void:
 	hp_bar.visible = true
 	statuses.visible = true
 	chosen_target_index = 0
-	gui._log("Choose a target.", 0)
+	gui._log("Choose a target.")
 	_select_target(0)
 
 func _select_target(new_index: int) -> void:
@@ -244,7 +246,6 @@ func _run_command(hero: Hero, main_cmd: int, sub_cmd: int, target: Fighter) -> v
 
 func _run_dummy(enemy: DummyEnemy) -> void:
 	busy = true
-	# can change enemy ai for choosing target here
 	var h = randi_range(0, heroes.size() - 1)
 	var target = heroes[h]
 	await enemy.attack(target)

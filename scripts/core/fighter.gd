@@ -27,11 +27,13 @@ var _flash := 0.0
 var sprite: AnimatedSprite2D               # set by setup_sprites(); null = box art
 var is_defending: bool = false
 var status_effects: Array[StatusEffectData]
+var timer: Timer = Timer.new()
 
 ## Build an AnimatedSprite2D from horizontal sprite sheets.
 ## anims: {name: [png_path, frame_count, fps, loop]}. Frames are square
 ## (side = sheet height). `feet` = pixel in a frame that should sit on this
 ## node's origin, so animations line up with the ground.
+
 func setup_sprites(anims: Dictionary, feet: Vector2, sprite_scale: float) -> void:
 	sprite = AnimatedSprite2D.new()
 	var frames := SpriteFrames.new()
@@ -68,6 +70,13 @@ func play_once(anim: StringName) -> void:
 func _on_hit_visual() -> void:
 	if sprite and is_alive() and sprite.animation != &"attack1":
 		play_once(&"hit")
+		
+func _wait(s: float) -> int:
+	timer.wait_time = s
+	timer.one_shot = true
+	timer.start()
+	await timer.timeout
+	return 0
 
 func _ready() -> void:
 	hp = max_hp
@@ -112,10 +121,11 @@ func take_damage(amount: int, attacker: Fighter = null) -> int:
 	hp_changed.emit(self, hp, max_hp)
 	damaged.emit(lost, attacker)
 	if hp <= 0:
-		log_message.emit("%s was defeated!" % fighter_name, 1)
+		log_message.emit("%s was defeated!" % fighter_name)
 		if sprite and sprite.sprite_frames.has_animation(&"death"):
 			sprite.play(&"death")
 		died.emit(self)
+		await _wait(1)
 	return lost
 
 func heal(amount: int) -> int:
@@ -125,6 +135,7 @@ func heal(amount: int) -> int:
 	hp += gained
 	PopupText.spawn(self, head_offset, "+%d" % gained, Color(0.4, 1, 0.5), 32)
 	hp_changed.emit(self, hp, max_hp)
+	_wait(0.4)
 	return gained
 	
 func _change_mp(amount: int) -> void:
@@ -133,20 +144,22 @@ func _change_mp(amount: int) -> void:
 	
 func defend() -> void:
 	is_defending = true
+	log_message.emit("%s defended." % [fighter_name])
 	if sprite:
 		sprite.modulate = Color(0.263, 0.627, 0.78)
 	else:
 		modulate = Color(0.263, 0.627, 0.78)
+	await _wait(0.6)
 	
 func _apply_effect(s: StatusEffectData) -> void:
 	var in_status_effects: bool = false
 	for i in status_effects:
 		if i.status_effect_name == s.status_effect_name:
-			log_message.emit("%s was extended." % [s.status_effect_name], 1)
+			log_message.emit("%s was extended." % [s.status_effect_name])
 			in_status_effects = true
 			i.duration = s.duration
 	if not in_status_effects:
-		log_message.emit("%s got %s." % [fighter_name, s.status_effect_name], 1)
+		log_message.emit("%s got %s." % [fighter_name, s.status_effect_name])
 		var s_copy = s.duplicate(true)
 		status_effects.append(s_copy)
 
@@ -179,7 +192,8 @@ func start_turn() -> void:
 func end_turn() -> void:
 	var poison = _has_effect(StatusEffectData.Kind.POISON)
 	if poison.has_effect:
-		log_message.emit("%s is poisoned. Lost %d HP!" % [fighter_name, poison.status_effect.power], 1)
+		log_message.emit("%s is poisoned. Lost %d HP!" % [fighter_name, poison.status_effect.power])
+		await _wait(0.6)
 		await take_damage(poison.status_effect.power)
 
 func _process(delta: float) -> void:

@@ -12,6 +12,7 @@ func _init() -> void:
 	input_action = &"hero_b"
 	input_key = KEY_X
 	ranged = true
+	add_child(timer)
 
 func _ready() -> void:
 	super._ready()

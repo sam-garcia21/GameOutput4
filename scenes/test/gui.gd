@@ -8,6 +8,7 @@ extends Control
 signal command_chosen(command: int, subcommand: int)
 
 var curr_hero_name: String
+var is_partner_alive: bool
 var curr_mp: int
 var command_list: Array
 var skill_list: Array[AttackData]
@@ -15,18 +16,13 @@ var item_list: Array[ItemData]
 
 var mainCommand
 
-func _log(s: String, time: int) -> void:
-	if (not timer.is_stopped()):
-		await timer.timeout
+func _log(s: String) -> void:
 	print(s)
 	log.text = s
-	if (time > 0):
-		timer.wait_time = time
-		timer.start()
-		await timer.timeout
 
 func _set_hero(hero: Hero) -> void:
 	curr_hero_name = hero.fighter_name
+	is_partner_alive = hero.partner.is_alive()
 	curr_mp = hero.mp
 	command_list = hero.turn_commands
 	skill_list = hero.skills
@@ -45,7 +41,7 @@ func _on_command_list_item_activated(index: int) -> void:
 		mainCommand = index
 		_use_sub_list()
 	elif index == command_list.size() - 1:
-		_log("There's no running from this battle.", 0)
+		_log("There's no running from this battle.")
 	else:
 		_clear_command_lists()
 		emit_signal("command_chosen", index, 0)
@@ -59,7 +55,7 @@ func _on_command_sub_list_item_activated(index: int) -> void:
 		_use_main_list()
 
 func _use_main_list():
-	_log("It's " + curr_hero_name + "'s turn!", 0)
+	_log("It's " + curr_hero_name + "'s turn!")
 	command_main_list.visible = true
 	command_sub_list.visible = false
 	_make_unselectable(command_sub_list)
@@ -77,6 +73,8 @@ func _use_sub_list():
 		for i in range(skill_list.size()):
 			command_sub_list.add_item(skill_list[i].attack_name + " - " + str(skill_list[i].mp_cost))
 			if skill_list[i].mp_cost > curr_mp:
+				command_sub_list.set_item_disabled(i, true)
+			if not is_partner_alive and skill_list[i].kind == AttackData.Kind.BROS:
 				command_sub_list.set_item_disabled(i, true)
 	elif mainCommand == 2:
 		for i in item_list:
@@ -100,7 +98,7 @@ func _on_sub_list_item_selected(index: int) -> void:
 		list = item_list
 
 	if index < list.size():
-		_log(list[index].description, 0)
+		_log(list[index].description)
 	else:
-		_log("Go back.", 0)
+		_log("Go back.")
 			

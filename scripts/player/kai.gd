@@ -11,6 +11,7 @@ func _init() -> void:
 	body_color = Color(0.85, 0.25, 0.2)
 	input_action = &"hero_a"
 	input_key = KEY_Z
+	add_child(timer)
 
 func _ready() -> void:
 	super._ready()
